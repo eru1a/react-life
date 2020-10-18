@@ -6,7 +6,7 @@ const cellSize = 20;
 
 type CellProps = {
   cell: Life.Cell;
-  handleClick: () => void;
+  handleClick: (cell: Life.Cell) => void;
 };
 
 const Cell: React.SFC<CellProps> = ({ cell, handleClick }) => {
@@ -23,14 +23,25 @@ const Cell: React.SFC<CellProps> = ({ cell, handleClick }) => {
         marginTop: -1,
         marginRight: -1,
       }}
-      onMouseDown={() => handleClick()}
+      onMouseDown={(e) => {
+        switch (e.nativeEvent.which) {
+          case 1:
+            handleClick(true);
+            break;
+          case 3:
+            handleClick(false);
+            break;
+          default:
+            break;
+        }
+      }}
     ></div>
   );
 };
 
 type BoardProps = {
   board: Life.Board;
-  handleClick: (x: number, y: number) => void;
+  handleClick: (x: number, y: number, cell: Life.Cell) => void;
 };
 
 const Board: React.SFC<BoardProps> = ({ board, handleClick }) => {
@@ -40,7 +51,9 @@ const Board: React.SFC<BoardProps> = ({ board, handleClick }) => {
   for (let y = 0; y < board.height; y++) {
     const row = [];
     for (let x = 0; x < board.width; x++) {
-      row.push(<Cell key={x} cell={board.getCell(x, y)} handleClick={() => handleClick(x, y)} />);
+      row.push(
+        <Cell key={x} cell={board.getCell(x, y)} handleClick={(cell) => handleClick(x, y, cell)} />
+      );
     }
     boardElem.push(
       <div key={y} className="board-row">
@@ -57,6 +70,7 @@ const Board: React.SFC<BoardProps> = ({ board, handleClick }) => {
         width: cellSize * (board.width + 1),
         height: cellSize * (board.height + 1),
       }}
+      onContextMenu={(e) => e.preventDefault()}
       // onMouseDown={(e) => {
       //   if (e.nativeEvent.which === 1) {
       //     setLeftClick(true);
@@ -81,10 +95,10 @@ const App = () => {
   const [timerID, setTimerID] = useState<NodeJS.Timeout | undefined>(undefined);
   const [runInterval, setRunInterval] = useState(50);
 
-  const handleClick = (x: number, y: number) => {
+  const handleClick = (x: number, y: number, cell: Life.Cell) => {
     setBoard((board) => {
       const clone = board.clone();
-      clone.setCell(x, y, true);
+      clone.setCell(x, y, cell);
       return clone;
     });
   };
