@@ -6,15 +6,31 @@ const cellSize = 20;
 
 type CellProps = {
   cell: Life.Cell;
-  handleClick: (cell: Life.Cell) => void;
+  shadow: boolean;
+  setCells: (leftClick: boolean) => void;
+  handleMouseMove: () => void;
 };
 
-const Cell: React.SFC<CellProps> = ({ cell, handleClick }) => {
+const Cell: React.SFC<CellProps> = ({
+  cell,
+  shadow,
+  setCells,
+  handleMouseMove: handleMouseEnter,
+}) => {
+  let background = "white";
+  if (cell && shadow) {
+    background = "yellow";
+  } else if (cell) {
+    background = "lightgreen";
+  } else if (shadow) {
+    background = "lightblue";
+  }
+
   return (
     <div
       className="cell"
       style={{
-        background: cell ? "lightgreen" : "white",
+        background,
         border: "1px solid #000",
         padding: 0,
         width: cellSize,
@@ -26,33 +42,52 @@ const Cell: React.SFC<CellProps> = ({ cell, handleClick }) => {
       onMouseDown={(e) => {
         switch (e.nativeEvent.which) {
           case 1:
-            handleClick(true);
+            setCells(true);
             break;
           case 3:
-            handleClick(false);
+            setCells(false);
             break;
           default:
             break;
         }
       }}
+      onMouseEnter={() => handleMouseEnter()}
     ></div>
   );
 };
 
 type BoardProps = {
   board: Life.Board;
-  handleClick: (x: number, y: number, cell: Life.Cell) => void;
+  setCells: (pos: Array<[number, number]>, cell: Life.Cell) => void;
 };
 
-const Board: React.SFC<BoardProps> = ({ board, handleClick }) => {
-  // const [leftClick, setLeftClick] = useState(false);
+const Board: React.SFC<BoardProps> = ({ board, setCells }) => {
+  const [shadow, setShadow] = useState<Array<[number, number]>>([]);
+  const pattern = [[0, 0]];
+
+  const handleMouseEnter = (x: number, y: number) => {
+    setShadow(pattern.map(([x2, y2]) => [x + x2, y + y2]));
+  };
 
   const boardElem = [];
   for (let y = 0; y < board.height; y++) {
     const row = [];
     for (let x = 0; x < board.width; x++) {
       row.push(
-        <Cell key={x} cell={board.getCell(x, y)} handleClick={(cell) => handleClick(x, y, cell)} />
+        <Cell
+          key={x}
+          cell={board.getCell(x, y)}
+          shadow={shadow.some(([x2, y2]) => x === x2 && y === y2)}
+          setCells={(leftClick) => {
+            if (!leftClick) {
+              setCells([[x, y]], false);
+              return;
+            }
+            const pos: Array<[number, number]> = pattern.map(([x2, y2]) => [x + x2, y + y2]);
+            setCells(pos, true);
+          }}
+          handleMouseMove={() => handleMouseEnter(x, y)}
+        />
       );
     }
     boardElem.push(
@@ -71,19 +106,6 @@ const Board: React.SFC<BoardProps> = ({ board, handleClick }) => {
         height: cellSize * (board.height + 1),
       }}
       onContextMenu={(e) => e.preventDefault()}
-      // onMouseDown={(e) => {
-      //   if (e.nativeEvent.which === 1) {
-      //     setLeftClick(true);
-      //   }
-      // }}
-      // onMouseUp={(e) => {
-      //   if (e.nativeEvent.which === 1) {
-      //     setLeftClick(false);
-      //   }
-      // }}
-      // onMouseLeave={() => {
-      //   setLeftClick(false);
-      // }}
     >
       {boardElem}
     </div>
@@ -95,10 +117,10 @@ const App = () => {
   const [timerID, setTimerID] = useState<NodeJS.Timeout | undefined>(undefined);
   const [runInterval, setRunInterval] = useState(50);
 
-  const handleClick = (x: number, y: number, cell: Life.Cell) => {
+  const setCells = (pos: Array<[number, number]>, cell: Life.Cell) => {
     setBoard((board) => {
       const clone = board.clone();
-      clone.setCell(x, y, cell);
+      pos.forEach(([x, y]) => clone.setCell(x, y, cell));
       return clone;
     });
   };
@@ -135,7 +157,7 @@ const App = () => {
 
   return (
     <div>
-      <Board board={board} handleClick={handleClick} />
+      <Board board={board} setCells={setCells} />
       <div>
         <button onClick={step}>step</button>
         <button disabled={timerID !== undefined} onClick={run}>
