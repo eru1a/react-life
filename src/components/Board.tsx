@@ -15,13 +15,14 @@ export const Board: React.SFC<BoardProps> = ({ board, pattern, setCells }) => {
     setShadow(pattern.pattern.map(([px, py]) => [x + px, y + py]));
   };
 
-  const boardElem = [];
+  const cells = [];
   for (let y = 0; y < board.height; y++) {
-    const row = [];
     for (let x = 0; x < board.width; x++) {
-      row.push(
+      cells.push(
         <Cell
-          key={x}
+          key={`${x}-${y}`}
+          boardWidth={board.width}
+          boardHeight={board.height}
           cell={board.getCell(x, y)}
           shadow={shadow.some(([sx, sy]) => x === sx && y === sy)}
           setCells={(leftClick) => {
@@ -29,28 +30,15 @@ export const Board: React.SFC<BoardProps> = ({ board, pattern, setCells }) => {
               setCells([[x, y]], false);
               return;
             }
-            const pos: Array<[number, number]> = pattern.pattern.map(([px, py]) => [
-              x + px,
-              y + py,
-            ]);
+            const pos: Array<[number, number]> = pattern.pattern
+              .map(([px, py]): [number, number] => [x + px, y + py])
+              .filter(([x, y]) => x >= 0 && x < board.width && y >= 0 && y < board.height);
             setCells(pos, true);
           }}
           handleMouseMove={() => handleMouseEnter(x, y)}
         />
       );
     }
-    boardElem.push(
-      <div
-        key={y}
-        className="board-row"
-        style={{
-          display: "flex",
-          flexDirection: "row",
-        }}
-      >
-        {row}
-      </div>
-    );
   }
 
   return (
@@ -58,11 +46,13 @@ export const Board: React.SFC<BoardProps> = ({ board, pattern, setCells }) => {
       className="board"
       style={{
         display: "flex",
-        flexDirection: "column",
+        flexWrap: "wrap",
+        width: "100%",
+        height: "100%",
       }}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {boardElem}
+      {cells}
     </div>
   );
 };

@@ -1,11 +1,10 @@
 import React from "react";
 import * as Life from "../life/life";
 
-// 画面の大きさに合わせて変更出来るようにするには...?
-const cellSize = 20;
-
 type CellProps = {
   cell: Life.Cell;
+  boardWidth: number;
+  boardHeight: number;
   shadow: boolean;
   setCells: (leftClick: boolean) => void;
   handleMouseMove: () => void;
@@ -13,6 +12,8 @@ type CellProps = {
 
 export const Cell: React.SFC<CellProps> = ({
   cell,
+  boardWidth,
+  boardHeight,
   shadow,
   setCells,
   handleMouseMove: handleMouseEnter,
@@ -43,13 +44,11 @@ export const Cell: React.SFC<CellProps> = ({
       onMouseEnter={() => handleMouseEnter()}
       style={{
         background,
-        border: "1px solid #000",
-        padding: 0,
-        width: cellSize,
-        height: cellSize,
-        lineHeight: cellSize,
-        marginTop: -1,
-        marginRight: -1,
+        // 重なってしまうの良くない
+        border: "1px solid #666",
+        width: `${(1 / boardWidth) * 100}%`,
+        height: `${(1 / boardHeight) * 100}%`,
+        boxSizing: "border-box",
       }}
     ></div>
   );

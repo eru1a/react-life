@@ -1,10 +1,24 @@
 import React, { useState } from "react";
 import { Board } from "./Board";
 import * as Life from "../life/life";
+import styled from "styled-components";
+
+const BoardArea = styled.div`
+  @media (min-aspect-ratio: 99/100) {
+    width: 90vh;
+    height: 90vh;
+  }
+  @media (max-aspect-ratio: 100/99) {
+    width: 90vw;
+    height: 90vw;
+  }
+
+  margin: auto;
+`;
 
 export const App = () => {
   const [board, setBoard] = useState(new Life.Board(20, 20));
-  const [timerID, setTimerID] = useState<NodeJS.Timeout | undefined>(undefined);
+  const [timerID, setTimerID] = useState<number | undefined>(undefined);
   const [runInterval, setRunInterval] = useState(50);
   const [pattern, setPattern] = useState(Life.patterns[0]);
 
@@ -26,7 +40,7 @@ export const App = () => {
 
   const run = () => {
     if (timerID !== undefined) return;
-    setTimerID(setInterval(step, runInterval) as NodeJS.Timeout);
+    setTimerID(setInterval(step, runInterval));
   };
 
   const stop = () => {
@@ -51,12 +65,23 @@ export const App = () => {
       <div className="container_app" style={{ display: "flex", justifyContent: "center" }}>
         <div
           className="container_board_buttons"
-          style={{ display: "flex", flexDirection: "column", margin: 5 }}
+          style={{
+            display: "flex",
+            flexFlow: "column",
+            margin: 5,
+          }}
         >
-          <Board board={board} pattern={pattern} setCells={setCells} />
+          <BoardArea>
+            <Board board={board} pattern={pattern} setCells={setCells} />
+          </BoardArea>
           <div
             className="conainer_buttons"
-            style={{ display: "flex", justifyContent: "center", margin: 5 }}
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              margin: 5,
+            }}
           >
             <button onClick={step}>step</button>
             <button disabled={timerID !== undefined} onClick={run}>
